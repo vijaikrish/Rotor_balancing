@@ -1,0 +1,4 @@
+asteval>=0.9.16
+numpy>=1.16
+scipy>=1.2
+uncertainties>=3.0.1
