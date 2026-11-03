@@ -1,41 +1,16 @@
-# Rotor Balancing
+# Rotor Balancing Workbench
 
-A desktop GUI tool (Python/Tkinter) for **single-plane rotor balancing** using the classic **influence coefficient method**, with a polar vector plot of the initial run, trial run, and resultant (effect) vector.
+A local Python/Tkinter engineering aid for single-plane and multi-plane/multi-speed influence-coefficient balancing. `Rotor_Balancing.py` launches the workbench; on Windows, `Launch_Rotor_Balancing.cmd` is the double-click launcher for the repository’s `.devvenv`. This is not a certified instrument or standards-compliance implementation. See the [user guide](docs/USER_GUIDE.md) and [source-backed references](docs/references.md).
 
-![Rotor Balancing UI](logo.png)
+The app includes **Single plane** and **Multi-plane / multi-speed** modes. Both use four stages: baseline, sequential trial runs, proposed correction with plots, and verification/trim. The multi-plane mode supports up to 8 planes, probes and speeds. See the user guide for operating procedure, model assumptions, plot legends, trim interpretation and safety caveats.
 
-## Current status
+The **Standards & tolerances** tab calculates the G-based residual-unbalance allowance and compares entered measured vibration against a user-provided agreed limit at nominal rpm. It supplies **no current ISO vibration-zone tables** and does not establish acceptance or compliance. Balance grade G is not measured vibration; no universal rpm-to-mm/s limit exists.
 
-| Tab | Status |
-|---|---|
-| **Single Plane** | ✅ Implemented — full influence-coefficient calculation + polar plot |
-| **Two Plane** | 🚧 Placeholder tab only, no logic yet |
-| **Help / Program info** | 🚧 Placeholder tabs, no content yet |
+![Rotor Balancing Workbench](assets/sahyadri_precision.png)
 
-So despite the repo name implying broader scope, today this is a **single-plane balancing calculator**. Two-plane (and the multi-speed / three-plane cases referenced in the code comments) are not implemented — contributions welcome.
+## Run locally
 
-## What it does
-
-Classic vibration-based rotor balancing with one trial weight:
-
-1. **Initial run** — measure baseline vibration vector `O` (amplitude + phase) with the rotor unbalanced.
-2. **Trial run** — add a known trial weight, measure the new vibration vector `O+T`.
-3. **Effect vector** `T = (O+T) - O` — the tool computes this as a complex-number subtraction.
-4. **Influence coefficient (IFC)** = trial weight / |T|, with the phase offset between the trial weight angle and the effect vector's phase.
-5. **Heavy spot** = initial vibration vector × influence coefficient (this is the unbalance relative to the trial weight's reference frame).
-6. **Correction weight** = magnitude of the heavy spot, at a phase **180° opposite** the heavy spot — this is the mass/angle to add to cancel the original unbalance.
-
-All vector math is done with Python's `cmath`/`numpy` (magnitude–phase ↔ complex-number conversions), and the three key vectors (Initial Run, Trial Run, Resultant) are drawn on a polar plot for a visual sanity check. A separate "Graph" button opens a more detailed polar plot including the trial weight and correction weight positions.
-
-## Requirements
-
-- Python 3.8+
-- See `requirements.txt`: `numpy`, `matplotlib`, `scipy`
-- `tkinter` and `cmath` are part of the Python standard library (on Windows, `tkinter` ships with the standard CPython installer; on Linux install `python3-tk` via your package manager if it's missing)
-
-## Running it
-
-```bash
+Requires Python with Tkinter and the packages in `requirements.txt`: NumPy, Matplotlib, SciPy and Pillow. On Windows, double-click `Launch_Rotor_Balancing.cmd` to launch using the repository’s `.devvenv` (it must already exist). For a new environment, use:
 python -m venv venv
 venv\Scripts\activate        # Windows
 # source venv/bin/activate   # Linux/macOS
@@ -43,29 +18,20 @@ pip install -r requirements.txt
 python Rotor_Balancing.py
 ```
 
-## Using the Single Plane tab
+The **Help: load worked example** buttons provide deterministic synthetic teaching inputs, not machine measurements. The app is local and does not persist job records; maintain an external run sheet.
 
-1. Run the rotor unbalanced. Record vibration **amplitude (mm/s)** and **phase angle (°)** → enter as **Initial Run**.
-2. Stop, attach a known **trial weight** (grams) at a known angle, note both in the **Trial Weight** fields.
-3. Run again with the trial weight attached. Record the new amplitude/phase → enter as **Trial Run**.
-4. Click **Calculate**. The tool fills in:
-   - **IFC** (influence coefficient): magnitude (mm/s per gram) and phase (°)
-   - **Correction Weight**: mass (grams) and angle (°) to add to the rotor to balance it
-5. Click **Graph** for a detailed polar plot of all vectors, or **Reset** to clear all fields.
-6. **Help** pre-fills the fields with a worked example (initial run 5.6 mm/s @ 135°, trial run 3.3 mm/s @ 238°, trial weight 74 g @ 315°) so you can see the method work end to end without a real rotor.
+## Engineering caveats
 
-> **Sign convention:** phase angles are measured per your own vibration analyzer's convention (typically relative to a keyphasor/trigger mark, increasing in the direction of rotation or against it depending on the instrument). Keep the same convention for initial run, trial run, and trial weight placement, or the correction weight angle will be wrong. This tool does not know your analyzer's convention — verify on a known case (e.g. the Help example) before trusting it on real equipment.
+Influence coefficients are an empirical local linear approximation. Comparable conditions, safe trial masses, consistent radius and phase conventions, full column rank and acceptable conditioning are essential. Least squares can trade off performance among channels; inspect each predicted residual. Predictions are not measured results. The trim calculation takes the actual installed net correction and fresh vibration measurements, returns an incremental proposal, and shows the candidate net total. Verify changes by measurement; do not treat a proposal as installed or accepted.
 
-## Known limitations
+Use qualified engineering review and applicable controlled standards, machine-specific criteria and site safety procedures. See [docs/references.md](docs/references.md) for standard scope, current-edition notes and research references.
 
-- Single trial weight / single plane / single speed only — no multi-plane, multi-speed, or least-squares overdetermined solutions.
-- No input validation — non-numeric entries will raise an uncaught exception.
-- No save/export of results; polar plots are just `matplotlib` figures with no file export hooked up.
-- `angle_plot.py` and `resize.py` are standalone demo/scratch scripts (angle-arc annotation and a `scipy.optimize.leastsq` curve-fit example) — they are not imported by `Rotor_Balancing.py` and are kept here as reference snippets, not part of the application.
+## Development checks
 
-## Disclaimer
-
-This is an engineering calculation aid, not a certified instrument. Verify results against your vibration analyzer's own balancing module or hand calculation before using correction weights on real rotating equipment. Field balancing carries real risk (mechanical damage, personnel safety) if trial/correction weights are sized or placed incorrectly — follow your site's rotating equipment safety procedures.
+```bash
+pip install -r requirements-dev.txt
+pytest tests/ -v
+```
 
 ## License
 

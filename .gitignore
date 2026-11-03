@@ -3,12 +3,14 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.pytest_cache/
 
 ## Virtual environments
 venv/
 .venv/
 env/
 ENV/
+.devvenv/
 
 ## PyInstaller build artifacts
 build/
